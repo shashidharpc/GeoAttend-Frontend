@@ -1,6 +1,8 @@
 // Production API Client for Attendance Geo Tracker
 // Connects directly to Flask REST API backend with cookie session management
 
+export const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+
 export function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371000; // meters
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -34,7 +36,11 @@ async function request(url, options = {}) {
     delete config.headers['Content-Type'];
   }
 
-  const response = await fetch(url, config);
+  const targetUrl = url.startsWith('http://') || url.startsWith('https://')
+    ? url
+    : `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+
+  const response = await fetch(targetUrl, config);
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
@@ -141,6 +147,13 @@ export const api = {
     return await request('/api/admin/students', {
       method: 'POST',
       body: { name, email, class_id, password },
+    });
+  },
+
+  async importStudents(formData) {
+    return await request('/api/admin/import_students', {
+      method: 'POST',
+      body: formData,
     });
   },
 

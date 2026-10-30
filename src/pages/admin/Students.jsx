@@ -109,12 +109,7 @@ export default function Students() {
       const formData = new FormData();
       formData.append('file', importFile);
 
-      const res = await fetch('/api/admin/import_students', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-      const data = await res.json();
+      const data = await api.importStudents(formData);
 
       if (data.success) {
         const detail = data.errors?.length
