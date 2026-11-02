@@ -49,6 +49,7 @@ export default function ScanQr() {
   // Simulator state (matches Image 4: Live Geofence Radar + movement slider)
   const [simulationMode, setSimulationMode] = useState(true);
   const [simDistance, setSimDistance] = useState(18);
+  const [isSliding, setIsSliding] = useState(false);
 
   // Scanner state
   const [isScanning, setIsScanning] = useState(false);
@@ -352,14 +353,24 @@ export default function ScanQr() {
       setVerificationResult(res);
 
       if (res.success) {
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          try { navigator.vibrate([35, 30, 45]); } catch (e) {}
+        }
         confetti({
           particleCount: 120,
           spread: 80,
           origin: { y: 0.6 },
           colors: ['#C2785C', '#3E7453', '#B57F26', '#4A6984'],
         });
+      } else {
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          try { navigator.vibrate([70, 40, 70]); } catch (e) {}
+        }
       }
     } catch (err) {
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        try { navigator.vibrate([70, 40, 70]); } catch (e) {}
+      }
       setVerificationResult({
         success: false,
         message: 'Network verification error: ' + err.message,
@@ -547,7 +558,10 @@ export default function ScanQr() {
                   background: isInsideGeofence ? '#10B981' : '#EF4444',
                   boxShadow: isInsideGeofence ? '0 0 12px #10B981' : '0 0 12px #EF4444',
                   transform: `translate(${dotX}px, ${dotY}px)`,
-                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: isSliding
+                    ? 'none'
+                    : 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s ease, box-shadow 0.15s ease',
+                  willChange: isSliding ? 'transform' : 'auto',
                   zIndex: 3,
                 }}
                 title={`Student: ${Math.round(activeDistance)}m from classroom`}
@@ -592,6 +606,12 @@ export default function ScanQr() {
                 max="60"
                 step="1"
                 value={simDistance}
+                onPointerDown={() => setIsSliding(true)}
+                onPointerUp={() => setIsSliding(false)}
+                onTouchStart={() => setIsSliding(true)}
+                onTouchEnd={() => setIsSliding(false)}
+                onMouseDown={() => setIsSliding(true)}
+                onMouseUp={() => setIsSliding(false)}
                 onChange={(e) => {
                   setSimDistance(Number(e.target.value));
                   setSimulationMode(true);
